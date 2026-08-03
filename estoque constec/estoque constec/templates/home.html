@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block titulo %}Início — CONSTEC{% endblock %}
+
+{% block content %}
+
+<style>
+  .home-wrap {
+    max-width: 680px;
+    margin: 60px auto 0;
+    padding: 0 24px 60px;
+    text-align: center;
+  }
+
+  .home-wrap h2 {
+    font-size: 26px;
+    font-weight: 600;
+    color: #e2e4f0;
+    margin-bottom: 10px;
+  }
+
+  .home-wrap p {
+    color: #7a84a0;
+    font-size: 15px;
+    margin-bottom: 36px;
+    line-height: 1.6;
+  }
+
+  .btn-whatsapp {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: #25d366;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    padding: 12px 28px;
+    border-radius: 8px;
+    transition: background .15s, transform .1s;
+    font-family: 'Segoe UI', sans-serif;
+  }
+
+  .btn-whatsapp:hover {
+    background: #1ebe5d;
+    transform: translateY(-1px);
+  }
+
+  .btn-whatsapp:active {
+    transform: translateY(0);
+  }
+
+  .btn-whatsapp svg {
+    flex-shrink: 0;
+  }
+</style>
+
+<div class="home-wrap">
+  <h2>Bem-vindo a CONSTEC</h2>
+  <p>Veja tudo o que podemos fazer por você.</p>
+
+  <a class="btn-whatsapp" href="https://wa.me/551147983720" target="_blank" rel="noopener noreferrer">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2a10 10 0 0 0-8.66 15L2 22l5.13-1.3A10 10 0 1 0 12 2Zm0 18.18a8.16 8.16 0 0 1-4.16-1.14l-.3-.18-3.04.77.81-2.96-.2-.31A8.18 8.18 0 1 1 12 20.18Zm4.48-6.12c-.25-.12-1.46-.72-1.69-.8-.23-.09-.4-.13-.57.13-.17.25-.65.8-.8.97-.14.17-.29.19-.54.06a6.7 6.7 0 0 1-1.98-1.22 7.42 7.42 0 0 1-1.37-1.7c-.14-.25 0-.38.11-.5l.38-.44c.12-.14.16-.25.25-.42.08-.17.04-.31-.02-.44-.06-.12-.57-1.37-.78-1.88-.2-.49-.41-.42-.57-.43h-.49c-.17 0-.44.06-.67.31-.23.25-.87.85-.87 2.07s.89 2.4 1.01 2.57c.12.16 1.75 2.68 4.24 3.76.59.26 1.06.41 1.42.52.6.19 1.15.16 1.58.1.48-.07 1.46-.6 1.67-1.18.21-.58.21-1.08.15-1.18-.06-.11-.23-.17-.48-.29Z"/>
+    </svg>
+    Fale conosco no WhatsApp
+  </a>
+  <div class="cards">
+    <a class="card-produto card-produto-fogao" href="https://wa.me/551147983720" target="_blank">
+      <img class="home-image" src="{{ url_for('static', filename='imagens/fogao.jpg') }}" alt="fogão">
+      <div class="card-legenda">
+        <span class="card-badge">Disponível</span>
+        <span class="card-nome">Fogão de 2- 4 bocas</span>
+        <span class="card-preco">Consulte o valor e modelos</span>
+        <span class="card-cta">Chamar no WhatsApp</span>
+      </div>
+    </a>
+
+    <a class="card-produto card-produto-cafeteira" href="https://wa.me/551147983720" target="_blank">
+      <img class="home-image" src="{{ url_for('static', filename='imagens/cafeteira.webp') }}" alt="cafeteira">
+      <div class="card-legenda">
+        <span class="card-badge">Disponível</span>
+        <span class="card-nome">Cafeteira Elétrica</span>
+        <span class="card-preco">Consulte o valor e modelos</span>
+        <span class="card-cta">Chamar no WhatsApp</span>
+      </div>
+    </a>
+
+
+        <a class="card-produto card-produto-panela" href="https://wa.me/551147983720" target="_blank">
+      <img class="home-image" src="{{ url_for('static', filename='imagens/panela.pressao.jpg') }}" alt="panela de pressão">
+      <div class="card-legenda">
+        <span class="card-badge">Disponível</span>
+        <span class="card-nome">Panela de Pressão</span>
+        <span class="card-preco">Consulte o valor e modelos</span>
+        <span class="card-cta">Chamar no WhatsApp</span>
+      </div>
+    </a>
+
+     <a class="card-produto card-produto-capa de maquina de lavar" href="https://wa.me/551147983720" target="_blank">
+      <img class="home-image" src="{{ url_for('static', filename='imagens/capa_maquina_lavar.jpg') }}" alt="capa de máquina de lavar">
+      <div class="card-legenda">
+        <span class="card-badge">Disponível</span>
+        <span class="card-nome">Capa de Máquina de Lavar</span>
+        <span class="card-preco">Consulte o valor e modelos</span>
+        <span class="card-cta">Chamar no WhatsApp</span>
+      </div>
+    </a>
+      
+     <a class="card-produto card-produto-saco de aspirador" href="https://wa.me/551147983720" target="_blank">
+      <img class="home-image" src="{{ url_for('static', filename='imagens/saco_aspirador.png') }}" alt="saco de aspirador">
+      <div class="card-legenda">
+        <span class="card-badge">Disponível</span>
+        <span class="card-nome">Saco de Aspirador</span>
+        <span class="card-preco">Consulte o valor e modelos</span>
+        <span class="card-cta">Chamar no WhatsApp</span>
+      </div>
+    </a>
+
+    <a class="card-produto card-produto-copo de liquidificador" href="https://wa.me/551147983720" target="_blank">
+      <img class="home-image" src="{{ url_for('static', filename='imagens/copo_liquidificador.png') }}" alt="copo de liquidificador">
+      <div class="card-legenda">
+        <span class="card-badge">Disponível</span>
+        <span class="card-nome">Copo de Liquidificador</span>
+        <span class="card-preco">Consulte o valor e modelos</span>
+        <span class="card-cta">Chamar no WhatsApp</span>
+      </div>
+    </a>
+
+     <a class="card-produto card-produto-panelas" href="https://wa.me/551147983720" target="_blank">
+      <img class="home-image" src="{{ url_for('static', filename='imagens/panelas.jpg') }}" alt="panelas">
+      <div class="card-legenda">
+        <span class="card-badge">Disponível</span>
+        <span class="card-nome">Panelas</span>
+        <span class="card-preco">Consulte o valor e modelos</span>
+        <span class="card-cta">Chamar no WhatsApp</span>
+      </div>
+    </a>
+  </div>
+</div>
+{% endblock %}
