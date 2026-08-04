@@ -1,0 +1,21 @@
+      <img src="{{ url_for('static', filename='imagens/fogao.jpg') }}" alt="fogão" width="300" height="200">
+
+
+
+      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      

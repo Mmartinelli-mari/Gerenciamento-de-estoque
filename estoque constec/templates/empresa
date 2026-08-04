@@ -1,0 +1,6 @@
+CREATE TABLE empresa (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nome TEXT,
+    cor_principal TEXT,
+    logo TEXT
+);
