@@ -1,249 +1,544 @@
-{% extends "base.html" %}
-{% block titulo %}Financeiro — CONSTEC{% endblock %}
-{% block content %}
-<div style="display:grid; gap:24px;">
-    <div>
-        <h2 style="margin-bottom:10px;">Controle financeiro</h2>
-        <p style="color:#7a84a0;">
-            Os lançamentos abaixo agora podem ser consultados e cadastrados pela interface usando <code>fetch()</code>,
-            sem depender só do recarregamento da página.
-        </p>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#0f1117">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="manifest" href="{{ url_for('manifest') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192.svg') }}">
+  <title>CONSTEC — Financeiro</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f1117;
+      --bg2:      #181b24;
+      --bg3:      #1e2130;
+      --border:   #2a2d3e;
+      --text:     #e2e4f0;
+      --muted:    #7a7f9a;
+      --accent:   #5b6bff;
+      --accent-h: #6e7dff;
+      --green:    #4ade80;
+      --amber:    #f59e0b;
+      --red:      #ef4444;
+      --radius:   6px;
+    }
+
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; font-size: 14px; min-height: 100vh; }
+
+    nav { background: var(--bg); border-bottom: 1px solid var(--border); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 52px; }
+    .logo { color: var(--accent); font-size: 16px; font-weight: 700; letter-spacing: .08em; text-decoration: none; }
+    .nav-links { display: flex; gap: 28px; list-style: none; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 13px; transition: color .15s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--text); }
+
+    main { max-width: 920px; margin: 0 auto; padding: 40px 24px 60px; }
+    h1 { font-size: 22px; font-weight: 600; margin-bottom: 28px; }
+    h2 { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
+
+    .card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 28px; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+    .form-full { grid-column: 1 / -1; }
+    label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+    input, select, textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 14px; font-family: inherit; padding: 9px 12px; outline: none; transition: border-color .15s; }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+    select option { background: var(--bg2); }
+    textarea { resize: vertical; min-height: 70px; }
+    .auto-val { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 12px; font-size: 13px; color: var(--muted); }
+
+    .pag-group { display: flex; flex-wrap: wrap; gap: 8px; }
+    .pag-pill { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg3); color: var(--muted); font-size: 13px; cursor: pointer; transition: all .15s; font-family: inherit; }
+    .pag-pill:hover { border-color: var(--accent); color: var(--text); }
+    .pag-pill.sel { border-color: var(--accent); background: rgba(91,107,255,.15); color: var(--accent); }
+
+    .upload-area { border: 1px dashed var(--border); border-radius: var(--radius); padding: 18px; text-align: center; cursor: pointer; position: relative; transition: border-color .15s; }
+    .upload-area:hover { border-color: var(--accent); }
+    .upload-area input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .upload-area span { font-size: 13px; color: var(--muted); }
+    .upload-area span b { color: var(--accent); font-weight: 500; }
+    #photo-prev { max-height: 110px; border-radius: 4px; margin-top: 10px; display: none; object-fit: cover; }
+
+    .btn { display: inline-flex; align-items: center; gap: 7px; padding: 9px 20px; border-radius: var(--radius); font-size: 14px; font-weight: 500; cursor: pointer; border: none; font-family: inherit; transition: all .15s; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-h); }
+    .btn-success { background: #15803d; color: #fff; }
+    .btn-success:hover { background: #166534; }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--bg3); color: var(--text); }
+    .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+
+    .sec-tabs { display: flex; gap: 2px; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+    .sec-tab { padding: 9px 18px; font-size: 13px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all .15s; background: transparent; border-top: none; border-left: none; border-right: none; font-family: inherit; }
+    .sec-tab:hover { color: var(--text); }
+    .sec-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .sec { display: none; }
+    .sec.active { display: block; }
+
+    .summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+    .summ-box { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; }
+    .summ-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+    .summ-val { font-size: 22px; font-weight: 600; }
+    .summ-val.green { color: var(--green); }
+    .summ-val.amber { color: var(--amber); }
+    .summ-val.red   { color: var(--red); }
+
+    .tbl-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th { padding: 9px 14px; text-align: left; font-size: 11px; color: var(--accent); letter-spacing: .06em; text-transform: uppercase; border-bottom: 1px solid var(--border); background: var(--bg); }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--bg3); }
+    tbody td { padding: 11px 14px; color: #c8cce0; }
+
+    .badge { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 600; letter-spacing: .04em; }
+    .badge-venda   { background: rgba(74,222,128,.12); color: var(--green); }
+    .badge-manut   { background: rgba(245,158,11,.12);  color: var(--amber); }
+    .badge-entrada { background: rgba(91,107,255,.12);  color: var(--accent); }
+    .badge-saida   { background: rgba(239,68,68,.12);   color: var(--red); }
+    .badge-pag     { background: rgba(91,107,255,.1); color: #93a8ff; font-size: 11px; padding: 2px 8px; border-radius: 20px; display: inline-block; }
+
+    .btn-del { background: transparent; border: 1px solid rgba(239,68,68,.25); border-radius: 4px; color: rgba(239,68,68,.6); padding: 3px 9px; font-size: 11px; cursor: pointer; font-family: inherit; transition: all .15s; }
+    .btn-del:hover { background: rgba(239,68,68,.1); color: var(--red); border-color: var(--red); }
+
+    .manut-item { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 10px; }
+    .manut-item-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+    .manut-item-title { font-size: 14px; font-weight: 500; }
+    .manut-item-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+    .manut-actions { display: flex; gap: 8px; align-items: center; }
+    .badge-done { background: rgba(74,222,128,.12); color: var(--green); font-size: 11px; padding: 2px 8px; border-radius: 20px; }
+
+    .sec-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+    .sub-section { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 14px; }
+    .empty { font-size: 13px; color: var(--muted); padding: 20px 0; }
+
+    .toast { display: none; background: #15803d; color: #fff; padding: 10px 16px; border-radius: var(--radius); font-size: 13px; margin-bottom: 16px; }
+    .toast.show { display: block; }
+
+    .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 9999; align-items: center; justify-content: center; }
+    .modal-bg.open { display: flex; }
+    .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: 8px; padding: 28px; width: 340px; }
+    .modal h3 { font-size: 15px; margin-bottom: 6px; }
+    .modal p  { font-size: 13px; color: var(--muted); margin-bottom: 20px; line-height: 1.5; }
+    .modal-err { font-size: 12px; color: var(--red); margin-top: 6px; display: none; }
+    .modal-err.show { display: block; }
+    .modal-btns { display: flex; gap: 10px; margin-top: 18px; }
+  </style>
+</head>
+<body>
+
+<!-- MODAL SENHA -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <h3>🔒 Confirmar exclusão</h3>
+    <p id="modal-desc">Digite a senha de administrador para confirmar.</p>
+    <label>Senha</label>
+    <input type="password" id="modal-senha" placeholder="••••••••"
+           onkeydown="if(event.key==='Enter') confirmarDel()">
+    <div class="modal-err" id="modal-err">Senha incorreta. Tente novamente.</div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="fecharModal()">Cancelar</button>
+      <button class="btn" style="background:var(--red);color:#fff;" onclick="confirmarDel()">Remover</button>
     </div>
-
-    <div id="financeiro-feedback" style="display:none; padding:12px 16px; border-radius:8px;"></div>
-
-    <form
-        id="financeiro-form"
-        method="POST"
-        action="{{ url_for('registrar_manual') }}"
-        style="max-width:none;"
-    >
-        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:16px;">
-            <div>
-                <label for="tipo">Tipo</label>
-                <select
-                    id="tipo"
-                    name="tipo"
-                    style="width:100%; padding:10px 14px; background-color:#0f1117; border:1px solid #2e3148; border-radius:8px; color:#e0e0e0; font-size:14px;"
-                    required
-                >
-                    <option value="ENTRADA">Entrada</option>
-                    <option value="MANUTENCAO">Manutenção</option>
-                </select>
-            </div>
-
-            <div>
-                <label for="valor">Valor</label>
-                <input
-                    type="number"
-                    id="valor"
-                    name="valor"
-                    step="0.01"
-                    min="0.01"
-                    placeholder="0,00"
-                    required
-                >
-            </div>
-        </div>
-
-        <div>
-            <label for="descricao">Descrição</label>
-            <input
-                type="text"
-                id="descricao"
-                name="descricao"
-                placeholder="Ex.: pagamento de fornecedor, entrada de caixa..."
-                required
-            >
-        </div>
-
-        <div style="display:flex; gap:12px; align-items:center; flex-wrap:wrap;">
-            <button type="submit" id="financeiro-submit">Registrar lançamento</button>
-            <span style="font-size:13px; color:#7a84a0;">Sem JavaScript, o formulário continua funcionando com o backend do Flask.</span>
-        </div>
-    </form>
-
-    <div>
-        <h3 style="margin-bottom:16px; color:#fff;">Últimos lançamentos</h3>
-
-        <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Descrição</th>
-                    <th>Valor</th>
-                    <th>Tipo</th>
-                    <th>Data</th>
-                </tr>
-            </thead>
-            <tbody id="financeiro-tbody">
-                {% if registros %}
-                    {% for r in registros %}
-                    <tr>
-                        <td>{{ r["id"] }}</td>
-                        <td>{{ r["descricao"] }}</td>
-                        <td>R$ {{ "%.2f"|format(r["valor"]) }}</td>
-                        <td>{{ r["tipo"] }}</td>
-                        <td>{{ r["data_registro"] }}</td>
-                    </tr>
-                    {% endfor %}
-                {% else %}
-                    <tr>
-                        <td colspan="5" style="color:#7a84a0;">Nenhum registro financeiro cadastrado ainda.</td>
-                    </tr>
-                {% endif %}
-            </tbody>
-        </table>
-    </div>
+  </div>
 </div>
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-    const endpoint = "{{ url_for('api_financeiro') }}";
-    const form = document.getElementById("financeiro-form");
-    const tbody = document.getElementById("financeiro-tbody");
-    const feedback = document.getElementById("financeiro-feedback");
-    const submitButton = document.getElementById("financeiro-submit");
-    const tipoInput = document.getElementById("tipo");
+<!-- NAVBAR -->
+<nav>
+  <a class="logo" href="#">CONSTEC</a>
+  <ul class="nav-links">
+    <li><a href="home.html">Início</a></li>
+    <li><a href="cadastrar.html">Cadastrar</a></li>
+    <li><a href="estoque.html">Estoque</a></li>
+    <li><a href="venda_rapida.html">Venda Rápida</a></li>
+    <li><a href="financeiro.html" class="active">Financeiro</a></li>
+    <li><button type="button" class="btn btn-ghost" id="installButton" hidden>Instalar app</button></li>
+  </ul>
+</nav>
 
-    function escapeHtml(value) {
-        return String(value ?? "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/\"/g, "&quot;")
-            .replace(/'/g, "&#39;");
-    }
+<main>
+  <h1>Controle financeiro</h1>
 
-    function mostrarFeedback(texto, tipo) {
-        const estilos = {
-            sucesso: {
-                background: "#1b3a2b",
-                border: "1px solid #2e6b4f",
-                color: "#4caf81"
-            },
-            erro: {
-                background: "#3a1b1b",
-                border: "1px solid #7f3030",
-                color: "#ff9b9b"
-            }
-        };
+  <!-- ABAS -->
+  <div class="sec-tabs">
+    <button class="sec-tab active" onclick="trocarAba('movimentacoes',this)">Movimentações</button>
+    <button class="sec-tab" onclick="trocarAba('manutencao',this)">Manutenção</button>
+  </div>
 
-        const estilo = estilos[tipo] || estilos.sucesso;
-        feedback.textContent = texto;
-        feedback.style.display = "block";
-        feedback.style.backgroundColor = estilo.background;
-        feedback.style.border = estilo.border;
-        feedback.style.color = estilo.color;
-    }
+  <!-- ══════════ ABA MOVIMENTAÇÕES ══════════ -->
+  <div class="sec active" id="sec-movimentacoes">
 
-    function formatarMoeda(valor) {
-        return new Intl.NumberFormat("pt-BR", {
-            style: "currency",
-            currency: "BRL"
-        }).format(Number(valor) || 0);
-    }
+    <!-- Formulário de lançamento manual -->
+    <div class="card">
+      <h2>Registrar lançamento</h2>
+      <form onsubmit="registrarLancamento(event)">
+        <div class="form-grid">
+          <div>
+            <label>Tipo</label>
+            <select id="l-tipo">
+              <option value="ENTRADA">Entrada</option>
+              <option value="SAIDA">Saída</option>
+            </select>
+          </div>
+          <div>
+            <label>Valor (R$)</label>
+            <input type="number" id="l-valor" step="0.01" min="0" placeholder="0,00">
+          </div>
+          <div class="form-full">
+            <label>Descrição</label>
+            <input type="text" id="l-descricao" placeholder="Ex.: pagamento de fornecedor, entrada de caixa...">
+          </div>
+          <div>
+            <label>Forma de pagamento</label>
+            <div class="pag-group" id="l-pag-group">
+              <button type="button" class="pag-pill" onclick="selPagLanc(this,'Dinheiro')">Dinheiro</button>
+              <button type="button" class="pag-pill" onclick="selPagLanc(this,'PIX')">PIX</button>
+              <button type="button" class="pag-pill" onclick="selPagLanc(this,'Crédito')">Crédito</button>
+              <button type="button" class="pag-pill" onclick="selPagLanc(this,'Débito')">Débito</button>
+              <button type="button" class="pag-pill" onclick="selPagLanc(this,'Boleto')">Boleto</button>
+            </div>
+          </div>
+          <div>
+            <label>Data / Hora (automático)</label>
+            <div class="auto-val" id="l-datetime">—</div>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary">Registrar lançamento</button>
+        <span style="font-size:12px;color:var(--muted);margin-left:14px;">
+          
+        </span>
+      </form>
+    </div>
 
-    function formatarData(valor) {
-        if (!valor) {
-            return "—";
-        }
+    <!-- Resumo -->
+    <div class="summary">
+      <div class="summ-box">
+        <div class="summ-label">Total entradas</div>
+        <div class="summ-val green" id="sum-entradas">R$ 74,00</div>
+      </div>
+      <div class="summ-box">
+        <div class="summ-label">Total saídas</div>
+        <div class="summ-val red" id="sum-saidas">R$ 0,00</div>
+      </div>
+      <div class="summ-box">
+        <div class="summ-label">Manutenções concluídas</div>
+        <div class="summ-val amber" id="sum-manut">R$ 0,00</div>
+      </div>
+    </div>
 
-        if (/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
-            const [ano, mes, dia] = valor.split("-");
-            return `${dia}/${mes}/${ano}`;
-        }
-
-        const normalizado = valor.includes(" ") ? valor.replace(" ", "T") : valor;
-        const data = new Date(normalizado);
-
-        if (Number.isNaN(data.getTime())) {
-            return valor;
-        }
-
-        return data.toLocaleString("pt-BR");
-    }
-
-    function renderizarRegistros(registros) {
-        if (!registros.length) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="5" style="color:#7a84a0;">Nenhum registro financeiro cadastrado ainda.</td>
-                </tr>
-            `;
-            return;
-        }
-
-        tbody.innerHTML = registros.map((registro) => `
+    <!-- Tabela -->
+    <h2>Últimos lançamentos</h2>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <div class="tbl-wrap">
+        <table>
+          <thead>
             <tr>
-                <td>${escapeHtml(registro.id)}</td>
-                <td>${escapeHtml(registro.descricao)}</td>
-                <td>${escapeHtml(formatarMoeda(registro.valor))}</td>
-                <td>${escapeHtml(registro.tipo)}</td>
-                <td>${escapeHtml(formatarData(registro.data_registro))}</td>
+              <th>ID</th>
+              <th>Descrição</th>
+              <th>Cliente</th>
+              <th>Valor</th>
+              <th>Pagamento</th>
+              <th>Tipo</th>
+              <th>Data</th>
+              <th></th>
             </tr>
-        `).join("");
+          </thead>
+          <tbody id="fin-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ ABA MANUTENÇÃO ══════════ -->
+  <div class="sec" id="sec-manutencao">
+
+    <!-- Lista -->
+    <div id="manut-lista-view">
+      <div class="sec-header">
+        <span style="font-size:13px;color:var(--muted);">Registros de manutenção</span>
+        <button class="btn btn-primary" onclick="abrirFormManut()">+ Nova manutenção</button>
+      </div>
+      <div id="manut-lista"></div>
+    </div>
+
+    <!-- Formulário -->
+    <div id="manut-form-view" style="display:none;">
+      <div id="toast-manut" class="toast">✓ Manutenção lançada no financeiro!</div>
+      <div class="card">
+        <h2>Nova manutenção</h2>
+
+        <p class="sub-section">Dados do cliente</p>
+        <div class="form-grid">
+          <div><label>Nome do cliente</label><input type="text" id="m-cliente" placeholder="Nome completo"></div>
+          <div><label>Telefone (opcional)</label><input type="text" id="m-telefone" placeholder="(00) 00000-0000"></div>
+        </div>
+
+        <hr class="divider">
+        <p class="sub-section">Dados do aparelho</p>
+        <div class="form-grid">
+          <div><label>Aparelho</label><input type="text" id="m-aparelho" placeholder="Ex: Liquidificador, Ferro..."></div>
+          <div><label>Descrição / Modelo</label><input type="text" id="m-descricao" placeholder="Marca ou detalhe"></div>
+          <div><label>Data de registro</label><div class="auto-val" id="m-data">—</div></div>
+          <div><label>Hora de registro</label><div class="auto-val" id="m-hora">—</div></div>
+          <div class="form-full"><label>Problema relatado</label><textarea id="m-problema" placeholder="Descreva o problema do aparelho..."></textarea></div>
+        </div>
+
+        <hr class="divider">
+        <p class="sub-section">Pagamento</p>
+        <div class="form-grid">
+          <div>
+            <label>Valor final (R$)</label>
+            <input type="number" id="m-valor" step="0.01" min="0" placeholder="0,00">
+          </div>
+          <div>
+            <label>Forma de pagamento</label>
+            <div class="pag-group" id="m-pag-group">
+              <button type="button" class="pag-pill" onclick="selPagManut(this,'Dinheiro')">Dinheiro</button>
+              <button type="button" class="pag-pill" onclick="selPagManut(this,'PIX')">PIX</button>
+              <button type="button" class="pag-pill" onclick="selPagManut(this,'Crédito')">Crédito</button>
+              <button type="button" class="pag-pill" onclick="selPagManut(this,'Débito')">Débito</button>
+              <button type="button" class="pag-pill" onclick="selPagManut(this,'Boleto')">Boleto</button>
+            </div>
+          </div>
+        </div>
+
+        <hr class="divider">
+        <p class="sub-section">Foto do aparelho</p>
+        <div class="upload-area">
+          <input type="file" accept="image/*" id="m-foto" onchange="prevFoto(this)">
+          <span><b>Clique para carregar</b> ou arraste a foto aqui</span><br>
+          <img id="photo-prev">
+        </div>
+
+        <div class="btn-row">
+          <button class="btn btn-ghost" onclick="fecharFormManut()">Cancelar</button>
+          <button class="btn btn-success" onclick="salvarManut()">✓ Concluído — lançar no financeiro</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   CONFIGURAÇÃO
+   ═══════════════════════════════════════════════════ */
+var SENHA_ADMIN = '1234'; // ← troque aqui
+
+/* ═══════════════════════════════════════════════════
+   ESTADO LOCAL
+   Para integrar com Flask, substitua estes arrays por
+   chamadas fetch('/api/financeiro') no init().
+   ═══════════════════════════════════════════════════ */
+var registros = [
+  { id:3, descricao:'Mondial', cliente:'', valor:20, pagamento:'', tipo:'MANUTENCAO', dtStr:'23/04/2026', isManut:true },
+  { id:2, descricao:'Venda de 1x Liquidificador copo', cliente:'', valor:50, pagamento:'', tipo:'VENDA', dtStr:'21/04/2026, 21:36:43', isManut:false },
+  { id:1, descricao:'Venda de 1x panela', cliente:'', valor:24, pagamento:'', tipo:'VENDA', dtStr:'21/04/2026, 20:36:58', isManut:false }
+];
+var manutencoes  = [];
+var nextId       = 4;
+var totalEntrada = 74;
+var totalSaida   = 0;
+var totalManut   = 20;
+var pagLanc      = '';
+var pagManut     = '';
+var deletePend   = null;
+
+/* ═══════════════════════════════════════════════════
+   ABAS
+   ═══════════════════════════════════════════════════ */
+function trocarAba(nome, el) {
+  document.querySelectorAll('.sec-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('sec-' + nome).classList.add('active');
+}
+
+/* ═══════════════════════════════════════════════════
+   PAGAMENTO
+   ═══════════════════════════════════════════════════ */
+function selPagLanc(btn, val) {
+  document.querySelectorAll('#l-pag-group .pag-pill').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel'); pagLanc = val;
+}
+function selPagManut(btn, val) {
+  document.querySelectorAll('#m-pag-group .pag-pill').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel'); pagManut = val;
+}
+
+/* ═══════════════════════════════════════════════════
+   CLOCK
+   ═══════════════════════════════════════════════════ */
+function agora() { return new Date().toLocaleString('pt-BR'); }
+setInterval(() => { var el = document.getElementById('l-datetime'); if (el) el.textContent = agora(); }, 1000);
+
+/* ═══════════════════════════════════════════════════
+   REGISTRAR LANÇAMENTO MANUAL
+   ═══════════════════════════════════════════════════ */
+function registrarLancamento(e) {
+  e.preventDefault();
+  var tipo  = document.getElementById('l-tipo').value;
+  var valor = parseFloat(document.getElementById('l-valor').value);
+  var desc  = document.getElementById('l-descricao').value.trim();
+  if (!desc || isNaN(valor) || valor <= 0) { alert('Preencha descrição e valor.'); return; }
+
+  registros.unshift({ id: nextId++, descricao: desc, cliente: '', valor, pagamento: pagLanc, tipo, dtStr: agora(), isManut: false });
+  if (tipo === 'ENTRADA') totalEntrada += valor; else totalSaida += valor;
+
+  document.getElementById('l-valor').value = '';
+  document.getElementById('l-descricao').value = '';
+  document.querySelectorAll('#l-pag-group .pag-pill').forEach(b => b.classList.remove('sel'));
+  pagLanc = '';
+  renderTudo();
+}
+
+/* ═══════════════════════════════════════════════════
+   MANUTENÇÃO
+   ═══════════════════════════════════════════════════ */
+function abrirFormManut() {
+  var now = new Date();
+  document.getElementById('m-data').textContent = now.toLocaleDateString('pt-BR');
+  document.getElementById('m-hora').textContent = now.toLocaleTimeString('pt-BR');
+  ['m-cliente','m-telefone','m-aparelho','m-descricao','m-problema','m-valor'].forEach(id => document.getElementById(id).value = '');
+  document.querySelectorAll('#m-pag-group .pag-pill').forEach(b => b.classList.remove('sel'));
+  pagManut = '';
+  document.getElementById('photo-prev').style.display = 'none';
+  document.getElementById('manut-lista-view').style.display = 'none';
+  document.getElementById('manut-form-view').style.display  = 'block';
+}
+
+function fecharFormManut() {
+  document.getElementById('manut-lista-view').style.display = 'block';
+  document.getElementById('manut-form-view').style.display  = 'none';
+}
+
+function prevFoto(input) {
+  if (input.files && input.files[0]) {
+    var r = new FileReader();
+    r.onload = e => { var img = document.getElementById('photo-prev'); img.src = e.target.result; img.style.display = 'block'; };
+    r.readAsDataURL(input.files[0]);
+  }
+}
+
+function salvarManut() {
+  var cliente  = document.getElementById('m-cliente').value.trim();
+  var telefone = document.getElementById('m-telefone').value.trim();
+  var aparelho = document.getElementById('m-aparelho').value.trim();
+  var descricao= document.getElementById('m-descricao').value.trim();
+  var problema = document.getElementById('m-problema').value.trim();
+  var valor    = parseFloat(document.getElementById('m-valor').value);
+  var data     = document.getElementById('m-data').textContent;
+  var hora     = document.getElementById('m-hora').textContent;
+  var imgEl    = document.getElementById('photo-prev');
+  var foto     = imgEl.style.display !== 'none' ? imgEl.src : null;
+
+  if (!aparelho || !problema || isNaN(valor) || valor <= 0) { alert('Preencha: aparelho, problema e valor final.'); return; }
+
+  var m = { id: nextId++, cliente, telefone, aparelho, descricao, problema, valor, pagamento: pagManut, data, hora, dtStr: agora(), foto };
+  manutencoes.unshift(m);
+  totalManut += valor;
+
+  registros.unshift({ id: m.id, descricao: 'Manutenção: ' + aparelho + (descricao ? ' — ' + descricao : ''), cliente, valor, pagamento: pagManut, tipo: 'MANUTENCAO', dtStr: m.dtStr, isManut: true });
+
+  renderTudo(); fecharFormManut();
+  var t = document.getElementById('toast-manut');
+  t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+/* ═══════════════════════════════════════════════════
+   DELETE COM SENHA
+   ═══════════════════════════════════════════════════ */
+function pedirDel(tipo, ref) {
+  deletePend = { tipo, ref };
+  document.getElementById('modal-desc').textContent =
+    tipo === 'fin' ? 'Digite a senha para remover este lançamento.' : 'Digite a senha para remover esta manutenção.';
+  document.getElementById('modal-senha').value = '';
+  document.getElementById('modal-err').classList.remove('show');
+  document.getElementById('modal-bg').classList.add('open');
+  setTimeout(() => document.getElementById('modal-senha').focus(), 60);
+}
+function fecharModal() { document.getElementById('modal-bg').classList.remove('open'); deletePend = null; }
+function confirmarDel() {
+  if (document.getElementById('modal-senha').value !== SENHA_ADMIN) {
+    document.getElementById('modal-err').classList.add('show');
+    document.getElementById('modal-senha').value = ''; document.getElementById('modal-senha').focus(); return;
+  }
+  if (deletePend.tipo === 'fin') {
+    var idx = registros.findIndex(r => r.id === deletePend.ref);
+    if (idx !== -1) {
+      var r = registros[idx];
+      if (r.tipo === 'ENTRADA') totalEntrada -= r.valor;
+      else if (r.tipo === 'SAIDA') totalSaida -= r.valor;
+      else if (r.isManut) totalManut -= r.valor;
+      registros.splice(idx, 1);
     }
+  } else {
+    manutencoes.splice(deletePend.ref, 1);
+  }
+  fecharModal(); renderTudo();
+}
 
-    async function carregarRegistros() {
-        const resposta = await fetch(endpoint, {
-            headers: {
-                "Accept": "application/json"
-            }
-        });
+/* ═══════════════════════════════════════════════════
+   RENDER
+   ═══════════════════════════════════════════════════ */
+function renderTudo() { renderFin(); renderManutLista(); renderSummary(); }
 
-        if (!resposta.ok) {
-            throw new Error("Nao foi possivel carregar os registros financeiros.");
-        }
+function renderSummary() {
+  document.getElementById('sum-entradas').textContent = 'R$ ' + totalEntrada.toFixed(2).replace('.', ',');
+  document.getElementById('sum-saidas').textContent   = 'R$ ' + totalSaida.toFixed(2).replace('.', ',');
+  document.getElementById('sum-manut').textContent    = 'R$ ' + totalManut.toFixed(2).replace('.', ',');
+}
 
-        const dados = await resposta.json();
-        renderizarRegistros(dados.registros || []);
-    }
+var badgeMap = { VENDA:'badge-venda', MANUTENCAO:'badge-manut', ENTRADA:'badge-entrada', SAIDA:'badge-saida' };
+function tipoBadge(tipo) { return '<span class="badge ' + (badgeMap[tipo]||'badge-entrada') + '">' + tipo + '</span>'; }
 
-    form.addEventListener("submit", async (event) => {
-        event.preventDefault();
-        feedback.style.display = "none";
-        submitButton.disabled = true;
-        submitButton.textContent = "Salvando...";
+function renderFin() {
+  var tbody = document.getElementById('fin-tbody');
+  tbody.innerHTML = '';
+  registros.forEach(r => {
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>' + r.id + '</td>' +
+      '<td>' + r.descricao + '</td>' +
+      '<td>' + (r.cliente || '<span style="color:var(--muted)">—</span>') + '</td>' +
+      '<td>R$ ' + r.valor.toFixed(2).replace('.', ',') + '</td>' +
+      '<td>' + (r.pagamento ? '<span class="badge-pag">' + r.pagamento + '</span>' : '<span style="color:var(--muted)">—</span>') + '</td>' +
+      '<td>' + tipoBadge(r.tipo) + '</td>' +
+      '<td style="color:var(--muted)">' + r.dtStr + '</td>' +
+      '<td><button class="btn-del" onclick="pedirDel(\'fin\',' + r.id + ')">🔒 Remover</button></td>';
+    tbody.appendChild(tr);
+  });
+}
 
-        const formData = new FormData(form);
-        const payload = {
-            tipo: formData.get("tipo"),
-            descricao: formData.get("descricao"),
-            valor: formData.get("valor")
-        };
+function renderManutLista() {
+  var c = document.getElementById('manut-lista');
+  if (!manutencoes.length) { c.innerHTML = '<div class="empty">Nenhuma manutenção registrada ainda.</div>'; return; }
+  c.innerHTML = '';
+  manutencoes.forEach((m, idx) => {
+    var el = document.createElement('div');
+    el.className = 'manut-item';
+    var cli = m.cliente ? '<span style="color:#93a8ff">' + m.cliente + '</span>' + (m.telefone ? ' · ' + m.telefone : '') + ' · ' : '';
+    var pag = m.pagamento ? ' · <span class="badge-pag">' + m.pagamento + '</span>' : '';
+    el.innerHTML =
+      '<div class="manut-item-head">' +
+        '<span class="manut-item-title">' + m.aparelho + (m.descricao ? ' — ' + m.descricao : '') + '</span>' +
+        '<div class="manut-actions"><span class="badge-done">Concluído</span><button class="btn-del" onclick="pedirDel(\'manut\',' + idx + ')">🔒 Remover</button></div>' +
+      '</div>' +
+      '<div class="manut-item-meta">' + cli + 'R$ ' + m.valor.toFixed(2).replace('.', ',') + pag + '</div>' +
+      '<div class="manut-item-meta">Problema: ' + m.problema + '</div>' +
+      '<div class="manut-item-meta">' + m.data + ' ' + m.hora + '</div>' +
+      (m.foto ? '<img src="' + m.foto + '" style="max-height:80px;border-radius:4px;margin-top:8px;object-fit:cover;">' : '');
+    c.appendChild(el);
+  });
+}
 
-        try {
-            const resposta = await fetch(endpoint, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const dados = await resposta.json();
-
-            if (!resposta.ok) {
-                throw new Error(dados.erro || "Nao foi possivel salvar o lancamento.");
-            }
-
-            form.reset();
-            tipoInput.value = "ENTRADA";
-            mostrarFeedback(dados.mensagem || "Registro financeiro adicionado!", "sucesso");
-            await carregarRegistros();
-        } catch (erro) {
-            mostrarFeedback(erro.message, "erro");
-        } finally {
-            submitButton.disabled = false;
-            submitButton.textContent = "Registrar lançamento";
-        }
-    });
-
-    carregarRegistros().catch(() => {
-        mostrarFeedback("Nao foi possivel atualizar a lista automaticamente agora.", "erro");
-    });
-});
+/* INIT */
+document.getElementById('l-datetime').textContent = agora();
+renderTudo();
 </script>
-{% endblock %}
+<script src="{{ url_for('static', filename='pwa.js') }}"></script>
+</body>
+</html>

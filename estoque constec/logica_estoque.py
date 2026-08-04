@@ -8,7 +8,7 @@ class produto:
         self.quantidade =quantidade
         self.categoria = categoria
         self.id = str(uuid.uuid4()) # Id Automatico
-
+#    def atualizar_quantidade(self, nova_quantidade):
 class Estoque:
     def __init__(self):
         self.produtos_por_codigo = {}
@@ -24,4 +24,4 @@ class Estoque:
                     self.produtos_por_codigo[produto.codigo_barras].quantidade += produto.quantidade
                 else:
                     self.produtos_por_codigo[produto.codigo_barras]=produto
-                
+                  

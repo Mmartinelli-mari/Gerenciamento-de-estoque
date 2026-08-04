@@ -1,276 +1,141 @@
-
-<input type="text" name="codigo" id="codigo" 
-       placeholder="Código de barras" 
-       autofocus>
-
 {% extends "base.html" %}
-{% block titulo %}Estoque — CONSTEC{% endblock %}
+{% block titulo %}Venda Rapida — CONSTEC{% endblock %}
 {% block content %}
-<h2>Estoque de produtos</h2>
-<a class="btn-link" href="/cadastrar">+ Cadastrar novo produto</a>
-<table>
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Nome</th>
-            <th>Descrição</th>
-            <th>Quantidade</th>
-            <th>Preço</th>
-            <th>Tipo</th>
-            <th>Vender</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for p in produtos %}
-        <tr>
-            <td>{{ p[0] }}</td>
-            <td>{{ p[1] }}</td>
-            <td>{{ p[3] }}</td>
-            <td>{{ p[4] }}</td>
-            <td>R$ {{ "%.2f"|format(p[5]) }}</td>
-            <td>{{ p[6] }}</td>
-            <td>
-                <form method="POST" action="/vender/{{ p[0] }}" style="display:flex; gap:6px;">
-                    <input type="number" name="quantidade" min="1" max="{{ p[4] }}"
-                           value="1" style="width:60px;">
-                    <button type="submit">Vender</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% endblock %}
-
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block titulo %}CONSTEC{% endblock %}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-<nav>
-    <div class="nav-logo">CONSTEC</div>
-    <div class="nav-links">
-        <a href="/">Início</a>
-        <a href="/cadastrar">Cadastrar</a>
-        <a href="/estoque">Estoque</a>
-        <a href="/financeiro">Financeiro</a>
+<section class="quick-sale-page">
+    <div class="quick-sale-header">
+        <h2>Venda Rapida</h2>
+        <p>Leia o codigo de barras ou digite manualmente para localizar o produto.</p>
     </div>
-</nav>
-<div class="container">
-    {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            {% for msg in messages %}
-                <div class="flash">{{ msg }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-    {% block content %}{% endblock %}
-</div>
-</body>
-</html>
 
-e estoque.html
+    <form method="POST" action="{{ url_for('venda_rapida') }}" class="quick-search-form">
+        <input
+            type="text"
+            name="codigo"
+            id="codigo"
+            placeholder="Codigo de barras..."
+            value="{{ codigo_buscado or '' }}"
+            autocomplete="off"
+            autofocus
+            required
+        >
+        <button type="submit">Buscar</button>
+    </form>
 
-{% extends "base.html" %}
-{% block titulo %}Estoque — CONSTEC{% endblock %}
-{% block content %}
-<h2>Estoque de produtos</h2>
-<a class="btn-link" href="/cadastrar">+ Cadastrar novo produto</a>
-<table>
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Nome</th>
-            <th>Descrição</th>
-            <th>Quantidade</th>
-            <th>Preço</th>
-            <th>Tipo</th>
-            <th>Vender</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for p in produtos %}
-        <tr>
-            <td>{{ p[0] }}</td>
-            <td>{{ p[1] }}</td>
-            <td>{{ p[3] }}</td>
-            <td>{{ p[4] }}</td>
-            <td>R$ {{ "%.2f"|format(p[5]) }}</td>
-            <td>{{ p[6] }}</td>
-            <td>
-                <form method="POST" action="/vender/{{ p[0] }}" style="display:flex; gap:6px;">
-                    <input type="number" name="quantidade" min="1" max="{{ p[4] }}"
-                           value="1" style="width:60px;">
-                    <button type="submit">Vender</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% endblock %}
+    {% if produto %}
+    <div class="quick-card">
+        <div class="quick-card-head">
+            <div>
+                <span class="quick-chip">Produto encontrado</span>
+                <h3>{{ produto["nome"] }}</h3>
+            </div>
+            <div class="quick-price">R$ {{ "%.2f"|format(produto["preco"] or 0) }}</div>
+        </div>
 
+        <div class="quick-grid">
+            <div class="quick-field">
+                <span>Codigo</span>
+                <strong>{{ produto["codigo_barras"] or "Sem codigo" }}</strong>
+            </div>
+            <div class="quick-field">
+                <span>Tipo</span>
+                <strong>{{ produto["tipo"] or "-" }}</strong>
+            </div>
+            <div class="quick-field quick-field-full">
+                <span>Descricao</span>
+                <strong>{{ produto["descricao"] or "-" }}</strong>
+            </div>
+            <div class="quick-field">
+                <span>Em estoque</span>
+                <strong class="{% if produto['quantidade'] > 0 %}text-ok{% else %}text-danger{% endif %}">
+                    {{ produto["quantidade"] }} unidades
+                </strong>
+            </div>
+        </div>
 
-{% extends "base.html" %}
-{% block titulo %}Venda Rápida — CONSTEC{% endblock %}
-{% block content %}
- 
-<h2>Venda Rápida</h2>
-<p style="color: #aaa; margin-bottom: 24px;">Leia o código de barras ou digite manualmente para localizar o produto.</p>
- 
-<!-- Formulário de busca -->
-<form method="POST" action="/venda-rapida" style="display:flex; gap:10px; margin-bottom:32px;">
-    <input
-        type="text"
-        name="codigo"
-        id="codigo"
-        placeholder="Código de barras..."
-        autofocus
-        autocomplete="off"
-        value="{{ codigo_buscado or '' }}"
-        style="flex:1; padding:10px 14px; font-size:1rem; border-radius:6px;
-               border:1px solid #444; background:#1e1e2e; color:#fff;"
-    >
-    <button type="submit" style="padding:10px 24px;">Buscar</button>
-</form>
- 
-<!-- Produto encontrado -->
-{% if produto %}
-    <div style="background:#1e1e2e; border:1px solid #444; border-radius:10px;
-                padding:24px; max-width:480px;">
- 
-        <h3 style="margin-top:0; color:#fff;">{{ produto[1] }}</h3>
- 
-        <table style="width:100%; border:none; margin-bottom:20px;">
-            <tr>
-                <td style="color:#aaa; padding:6px 0;">Descrição</td>
-                <td style="color:#fff;">{{ produto[3] or "—" }}</td>
-            </tr>
-            <tr>
-                <td style="color:#aaa; padding:6px 0;">Tipo</td>
-                <td style="color:#fff;">{{ produto[6] }}</td>
-            </tr>
-            <tr>
-                <td style="color:#aaa; padding:6px 0;">Em estoque</td>
-                <td style="color:{% if produto[4] > 0 %}#4ade80{% else %}#f87171{% endif %};">
-                    {{ produto[4] }} unidades
-                </td>
-            </tr>
-            <tr>
-                <td style="color:#aaa; padding:6px 0;">Preço unitário</td>
-                <td style="color:#fff; font-weight:bold;">R$ {{ "%.2f"|format(produto[5]) }}</td>
-            </tr>
-        </table>
- 
-        {% if produto[4] > 0 %}
-        <form method="POST" action="/vender/{{ produto[0] }}" style="display:flex; gap:10px; align-items:center;">
+        {% if produto["quantidade"] > 0 %}
+        <form method="POST" action="{{ url_for('vender', id_produto=produto['id']) }}" class="quick-inline-form">
             <input type="hidden" name="origem" value="venda_rapida">
-            <label style="color:#aaa;">Quantidade:</label>
-            <input
-                type="number"
-                name="quantidade"
-                min="1"
-                max="{{ produto[4] }}"
-                value="1"
-                style="width:70px; padding:8px; border-radius:6px;
-                       border:1px solid #444; background:#2a2a3e; color:#fff; font-size:1rem;"
-            >
-            <button type="submit" style="padding:8px 22px; background:#4f46e5;">
-                ✔ Confirmar Venda
-            </button>
+
+            <div class="quick-inline-group">
+                <label for="quantidade-venda">Quantidade</label>
+                <input
+                    id="quantidade-venda"
+                    type="number"
+                    name="quantidade"
+                    min="1"
+                    max="{{ produto['quantidade'] }}"
+                    value="1"
+                    required
+                >
+            </div>
+
+            <button type="submit" class="quick-confirm-btn">Confirmar venda</button>
         </form>
         {% else %}
-            <p style="color:#f87171;">⚠ Produto sem estoque disponível.</p>
+        <p class="quick-empty-stock">Produto sem estoque disponivel.</p>
         {% endif %}
     </div>
- 
-<!-- Produto NÃO encontrado -->
-{% elif busca_realizada %}
-    <div style="background:#2a1a1a; border:1px solid #f87171; border-radius:8px;
-                padding:16px 20px; max-width:480px; margin-bottom:24px;">
-        <p style="color:#f87171; margin:0 0 12px 0;">
-            ✘ Nenhum produto encontrado com o código <strong>{{ codigo_buscado }}</strong>.
-        </p>
+
+    {% elif busca_realizada %}
+    <div class="quick-alert">
+        <p>Nenhum produto encontrado com o codigo <strong>{{ codigo_buscado }}</strong>.</p>
         <button
+            type="button"
+            class="quick-secondary-btn"
             onclick="document.getElementById('form-cadastro').style.display='block'; this.style.display='none';"
-            style="padding:8px 20px; background:#4f46e5; border:none; border-radius:6px;
-                   color:#fff; cursor:pointer; font-size:0.95rem;">
-            + Cadastrar este produto
+        >
+            Cadastrar este produto
         </button>
     </div>
- 
-    <!-- Formulário de cadastro inline -->
-    <div id="form-cadastro" style="display:none; background:#1e1e2e; border:1px solid #555;
-         border-radius:10px; padding:24px; max-width:480px;">
- 
-        <h3 style="margin-top:0; color:#fff;">Cadastrar novo produto</h3>
- 
-        <form method="POST" action="/cadastrar-rapido">
- 
-            <div style="margin-bottom:14px;">
-                <label style="color:#aaa; display:block; margin-bottom:4px;">Código de barras</label>
-                <input type="text" name="codigo" value="{{ codigo_buscado }}"
-                       style="width:100%; padding:9px 12px; border-radius:6px; box-sizing:border-box;
-                              border:1px solid #444; background:#2a2a3e; color:#fff; font-size:1rem;">
+
+    <div id="form-cadastro" class="quick-card" style="display:none;">
+        <div class="quick-card-head">
+            <div>
+                <span class="quick-chip">Cadastro rapido</span>
+                <h3>Novo produto</h3>
             </div>
- 
-            <div style="margin-bottom:14px;">
-                <label style="color:#aaa; display:block; margin-bottom:4px;">Nome *</label>
-                <input type="text" name="nome" required
-                       style="width:100%; padding:9px 12px; border-radius:6px; box-sizing:border-box;
-                              border:1px solid #444; background:#2a2a3e; color:#fff; font-size:1rem;">
-            </div>
- 
-            <div style="margin-bottom:14px;">
-                <label style="color:#aaa; display:block; margin-bottom:4px;">Descrição</label>
-                <input type="text" name="descricao"
-                       style="width:100%; padding:9px 12px; border-radius:6px; box-sizing:border-box;
-                              border:1px solid #444; background:#2a2a3e; color:#fff; font-size:1rem;">
-            </div>
- 
-            <div style="display:flex; gap:12px; margin-bottom:14px;">
-                <div style="flex:1;">
-                    <label style="color:#aaa; display:block; margin-bottom:4px;">Quantidade *</label>
-                    <input type="number" name="quantidade" min="0" required
-                           style="width:100%; padding:9px 12px; border-radius:6px; box-sizing:border-box;
-                                  border:1px solid #444; background:#2a2a3e; color:#fff; font-size:1rem;">
+        </div>
+
+        <form method="POST" action="{{ url_for('cadastrar_rapido') }}" class="quick-register-form">
+            <div class="quick-grid">
+                <div class="quick-field">
+                    <label for="codigo-cadastro">Codigo de barras</label>
+                    <input id="codigo-cadastro" type="text" name="codigo" value="{{ codigo_buscado }}">
                 </div>
-                <div style="flex:1;">
-                    <label style="color:#aaa; display:block; margin-bottom:4px;">Preço *</label>
-                    <input type="number" name="preco" step="0.01" min="0" required
-                           style="width:100%; padding:9px 12px; border-radius:6px; box-sizing:border-box;
-                                  border:1px solid #444; background:#2a2a3e; color:#fff; font-size:1rem;">
+                <div class="quick-field">
+                    <label for="nome-cadastro">Nome *</label>
+                    <input id="nome-cadastro" type="text" name="nome" required>
+                </div>
+                <div class="quick-field quick-field-full">
+                    <label for="descricao-cadastro">Descricao</label>
+                    <input id="descricao-cadastro" type="text" name="descricao">
+                </div>
+                <div class="quick-field">
+                    <label for="quantidade-cadastro">Quantidade *</label>
+                    <input id="quantidade-cadastro" type="number" name="quantidade" min="0" required>
+                </div>
+                <div class="quick-field">
+                    <label for="preco-cadastro">Preco *</label>
+                    <input id="preco-cadastro" type="number" name="preco" step="0.01" min="0" required>
+                </div>
+                <div class="quick-field quick-field-full">
+                    <label for="tipo-cadastro">Tipo *</label>
+                    <input id="tipo-cadastro" type="text" name="tipo" required>
                 </div>
             </div>
- 
-            <div style="margin-bottom:20px;">
-                <label style="color:#aaa; display:block; margin-bottom:4px;">Tipo *</label>
-                <input type="text" name="tipo" required
-                       style="width:100%; padding:9px 12px; border-radius:6px; box-sizing:border-box;
-                              border:1px solid #444; background:#2a2a3e; color:#fff; font-size:1rem;">
-            </div>
- 
-            <div style="display:flex; gap:10px;">
-                <button type="submit"
-                        style="flex:1; padding:10px; background:#4f46e5; border:none;
-                               border-radius:6px; color:#fff; font-size:1rem; cursor:pointer;">
-                    ✔ Cadastrar produto
-                </button>
-                <button type="button"
-                        onclick="document.getElementById('form-cadastro').style.display='none';"
-                        style="padding:10px 16px; background:#333; border:none;
-                               border-radius:6px; color:#aaa; cursor:pointer;">
+
+            <div class="quick-actions">
+                <button type="submit">Salvar produto</button>
+                <button
+                    type="button"
+                    class="quick-secondary-btn"
+                    onclick="document.getElementById('form-cadastro').style.display='none';"
+                >
                     Cancelar
                 </button>
             </div>
- 
         </form>
     </div>
-{% endif %}
- 
+    {% endif %}
+</section>
 {% endblock %}
- 
